@@ -10,10 +10,17 @@ dependencies = [
     "PyMaxflow>=1.3",
     "tifffile>=2024.1",
     "imagecodecs>=2024.1",
+    "pillow>=10.0",
 ]
 
 [project.scripts]
 lattice-unroll = "lattice_unroll.lattice:main"
+lattice-march = "lattice_unroll.march:main"
+lattice-fetch = "lattice_unroll.stores:main"
+lattice-peek = "lattice_unroll.peek:main"
+lattice-withheld = "lattice_unroll.withheld:main"
+lattice-check = "lattice_unroll.check:main"
+lattice-xsec = "lattice_unroll.xsec:main"
 
 [build-system]
 requires = ["hatchling"]

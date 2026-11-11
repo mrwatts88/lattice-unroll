@@ -1,10 +1,11 @@
-"""tracks_withheld.py: the withheld traces of a band, from a trace store on disk, in the format of tracks_fetch.py.
+"""lattice-withheld: the withheld traces of a band, from a trace store on disk.
 
-    uv run --with numpy python cinder/tracks_withheld.py STORE_DIR Z0 Z1 OUT.npz [--mod 10 --rem 7] [--max-tracks 400000]
+    lattice-withheld STORE_DIR Z0 Z1 OUT.npz [--mod 10 --rem 7] [--max-tracks 400000]
 
-lattice.py never reads traces whose store index modulo --mod equals --rem. This writes exactly those
-(the ones that lie whole inside z0 <= z < z1) so track_check.py can score surfaces on them:
-xyz (points, columns z y x), start (first point of each trace, plus the end), track (store index).
+lattice-unroll never reads traces whose store index modulo --mod equals --rem (by default one in ten).
+This writes exactly those (the ones that lie whole inside z0 <= z < z1) so lattice-check can score
+surfaces on them: xyz (points, columns z y x), start (first point of each trace, plus the end),
+track (store index).
 """
 import argparse
 import json

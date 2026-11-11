@@ -1,7 +1,6 @@
-"""lattice.py: winding numbers straight from the organisers' trace lattice, without a spiral fit.
+"""lattice-unroll: winding numbers straight from the organisers' trace lattice, without a spiral fit.
 
-    uv run --with numpy --with scipy --with PyMaxflow --with tifffile --with imagecodecs \
-        python cinder/lattice.py STORE_DIR UMBILICUS.json Z0 Z1 OUT_DIR [--hold-mod 10 --hold-rem 7]
+    lattice-unroll STORE_DIR AXIS.json Z0 Z1 OUT_DIR [--hold-mod 10 --hold-rem 7] [options]
 
 STORE_DIR is a .vctracks folder (coordinates.i32, offsets.i64, z_bounds.i32, family_codes.i8,
 metadata.json): the fitter's own input. Its traces form a lattice over every predicted sheet: "h"
@@ -16,7 +15,7 @@ has gone round the axis since its first point (unwrapped angle about the publish
              first other trace met within --gap2 voxels is one winding further out: n + 1.
              Weight 1 up to --gap1 voxels, 0.25 beyond.
   order      the same pairs: whatever lies between, the outer one is at least one winding further out.
-The whole numbers that break the least vote weight are found exactly (relabel.exact: region moves by
+The whole numbers that break the least vote weight are found exactly (solver.exact: region moves by
 minimum cuts). Output: one tifxyz surface per winding (rows along z, columns round the turn), named
 s<number>, and numbers.npz with the number of every trace.
 
@@ -248,7 +247,7 @@ def export(args, zyx, th, rho, wind, okp, sense, shift, t0):
             tifffile.imwrite(os.path.join(od, f"{ax}.tif"), np.where(v, Y[..., j], -1.0).astype(np.float32))
         m2 = dict(src_meta)
         m2["uuid"] = name
-        m2["source"] = "cinder lattice.py: winding %d from the trace lattice, no spiral fit" % (wn + shift)
+        m2["source"] = "lattice-unroll: winding %d from the trace lattice, no spiral fit" % (wn + shift)
         m2["bbox"] = [[float(Y[v][:, k].min()) for k in range(3)], [float(Y[v][:, k].max()) for k in range(3)]]
         m2.pop("area_vx2", None); m2.pop("area_cm2", None)
         json.dump(m2, open(os.path.join(od, "meta.json"), "w"), indent=1)
@@ -289,14 +288,14 @@ def inner_axis(args, zyx, th, wind, okp):
         cx, cy = float((sx[ok] / cnt[k][ok]).mean()), float((sy[ok] / cnt[k][ok]).mean())
         rad = float(np.median(np.hypot(sx[ok] / cnt[k][ok] - cx, sy[ok] / cnt[k][ok] - cy)))
         cps.append({"x": cx, "y": cy, "z": int(z0 + args.axis_slab // 2), "score": 100, "winding": k + lo, "radius": rad})
-    json.dump({"control_points": cps, "source": "cinder lattice.py: middle of the innermost complete winding"},
+    json.dump({"control_points": cps, "source": "lattice-unroll: middle of the innermost complete winding"},
               open(os.path.join(args.out_dir, "axis_inner.json"), "w"), indent=1)
     if cps:
         log("innermost complete winding, per slab (z, x, y, median radius): " + "; ".join(f"{c['z']} {c['x']:.0f} {c['y']:.0f} r{c['radius']:.0f}" for c in cps))
 
 
-def main():
-    ap = argparse.ArgumentParser()
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("store")
     ap.add_argument("umbilicus")
     ap.add_argument("z0", type=int)
@@ -330,7 +329,7 @@ def main():
     ap.add_argument("--only", type=int, nargs="+", help="write only these surface numbers")
     ap.add_argument("--axis-slab", type=int, default=80, help="slab height for the report of the innermost complete winding")
     ap.add_argument("--no-surfaces", action="store_true", help="solve and report only")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
     t0 = time.time()
     os.makedirs(args.out_dir, exist_ok=True)
     cache = args.cache or os.path.join(args.out_dir, f"band_{args.z0}_{args.z1}.npz")

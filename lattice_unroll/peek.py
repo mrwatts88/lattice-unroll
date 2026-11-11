@@ -1,50 +1,35 @@
-"""trace_peek.py: look at one cross-section of a scroll's public trace store without downloading the store.
+"""lattice-peek: one cross-section of a scroll's public trace store, without downloading the whole store.
 
-    uv run --with numpy --with pillow python cinder/trace_peek.py SCROLL OUT.png [--z-frac 0.5] [--down 6] [--dir runs]
+    lattice-peek SCROLL OUT.png [--z 10237 | --z-frac 0.5] [--down 6] [--stores stores]
 
-Finds the scroll's volume folder under https://dl.ash2txt.org/datasets/spiral_datasets/SCROLL/, downloads
-the three small index files (offsets, z bounds, families: about 250 MB) to DIR/tracks_SCROLL/ if they are
-not there, then reads only the h traces of one slice from coordinates.i32 with range requests and draws
-them (grey points, a coordinate grid every 500 voxels). For choosing which scroll to map next and for
-placing a first axis point by eye: a scroll whose turns can be followed round a hollow middle suits
-lattice.py, a scroll crushed into zig-zag folds does not.
+Fetches the scroll's index files (about 300 MB) to STORES/SCROLL/ if they are not there (the same place
+lattice-fetch puts them), then reads only the h traces of one slice from coordinates.i32 with range
+requests and draws them: grey points, a coordinate grid every 500 voxels. For choosing a scroll and for
+placing the first axis point by eye: a scroll whose turns can be followed round a hollow middle suits
+lattice-unroll, a scroll crushed into zig-zag folds does not. The axis point goes inside the innermost
+loop. --down 2 gives a sharper picture of the middle.
 """
 import argparse
 import json
 import os
-import re
-import urllib.request
 
 import numpy as np
 from PIL import Image, ImageDraw
 
-BASE = "https://dl.ash2txt.org/datasets/spiral_datasets"
-
-
-def get(url, rng=None):
-    req = urllib.request.Request(url, headers={"Range": f"bytes={rng[0]}-{rng[1]}"} if rng else {})
-    return urllib.request.urlopen(req, timeout=300).read()
+from .stores import fetch, get
 
 
 def main():
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("scroll")
     ap.add_argument("out")
     ap.add_argument("--z-frac", type=float, default=0.5)
     ap.add_argument("--z", type=int)
     ap.add_argument("--down", type=int, default=6)
-    ap.add_argument("--dir", default="runs")
+    ap.add_argument("--stores", default="stores")
     args = ap.parse_args()
-    vols = re.findall(r'href="(\d+)/"', get(f"{BASE}/{args.scroll}/").decode())
-    vol = vols[-1]
-    stores = re.findall(r'href="([^"]+\.vctracks)/"', get(f"{BASE}/{args.scroll}/{vol}/tracks/").decode())
-    url = f"{BASE}/{args.scroll}/{vol}/tracks/{stores[0]}"
-    d = os.path.join(args.dir, f"tracks_{args.scroll}")
-    os.makedirs(d, exist_ok=True)
-    for f in ("metadata.json", "family_codes.i8", "offsets.i64", "z_bounds.i32"):
-        if not os.path.exists(os.path.join(d, f)):
-            open(os.path.join(d, f), "wb").write(get(f"{url}/{f}"))
-    meta = json.load(open(os.path.join(d, "metadata.json")))
+    url, d, meta = fetch(args.scroll, args.stores, index_only=True)
+    vol = url.split("/")[-3]
     off = np.fromfile(os.path.join(d, "offsets.i64"), dtype="<i8")
     zb = np.fromfile(os.path.join(d, "z_bounds.i32"), dtype="<i4").reshape(-1, 2)
     fam = np.fromfile(os.path.join(d, "family_codes.i8"), dtype=np.int8)

@@ -82,6 +82,18 @@ does reach, its snap pulls neighbouring windings onto the same sheet. Where a tr
 methods keep it on one surface about equally often. The difference is in how much of the scroll is covered
 and how often a sheet is doubled.
 
+Cross-section at z 8200 (`lattice-xsec`): grey is every traced sheet, each colour one surface. Left the
+published chain's snapped windings, right lattice-unroll. The fit leaves the outer third of the scroll
+without a surface. Ours reaches the edge. Ours is wrong in the crushed fragment zone at the upper left and
+in a smaller patch at the lower left.
+
+![Cross-section of PHerc. 0175A at z 8200, published chain left, lattice-unroll right](docs/xsec_0175A_z8200.png)
+
+Close-up (x 5300 to 6500, y 4500 to 5500). On the left, pairs of colours run along the same sheet (two
+windings on one sheet) and leave the next sheet empty. On the right, one colour per sheet.
+
+![Close-up of the same cross-section](docs/xsec_0175A_z8200_zoom.png)
+
 ## Limits
 
 - About a sixth to a third of the sheets on a ray get no surface (PHerc. 0175A: 13 to 17 percent,
@@ -98,23 +110,51 @@ and how often a sheet is doubled.
 
 ## Use
 
+Needs [uv](https://docs.astral.sh/uv/) and Python 3.11 or newer. No GPU. Example: a 400-slice band of
+PHerc. 343, from nothing to scored surfaces.
+
 ```bash
+git clone <this repository> lattice-unroll
+cd lattice-unroll
 uv sync
-# the track store of a scroll: https://dl.ash2txt.org/datasets/spiral_datasets/<SCROLL>/<volume>/tracks/
-uv run lattice-unroll STORE_DIR AXIS.json Z0 Z1 OUT_DIR --w-cross 8 --w-near 4 --split-rounds 2 \
-    --row-step 20 --col-step 20 --max-spread 5
+
+# 1. The scroll's trace store, 9 GB for PHerc. 343. Run again to resume an interrupted download.
+uv run lattice-fetch PHerc0343 stores
+
+# 2. Look at one cross-section and pick a point inside the innermost loop (the grid is every 500 voxels).
+uv run lattice-peek PHerc0343 peek.png --z 10237 --down 2
+
+# 3. Carry the axis from that point along the band. Prints the winding sense it reads.
+uv run lattice-march stores/PHerc0343 axis.json 10000 10400 march --start 5066 4321 10237 \
+    --w-cross 8 --w-near 4 --split-rounds 2
+
+# 4. Solve the band and write one surface per winding to out/s<number>/ (tifxyz).
+uv run lattice-unroll stores/PHerc0343 axis.json 10000 10400 out --sense 1 \
+    --w-cross 8 --w-near 4 --split-rounds 2 --tail-rel 0.0005 --row-step 20 --col-step 20 --max-spread 5
+
+# 5. Score the surfaces on the traces the solver never read (one in ten), and draw a cross-section.
+uv run lattice-withheld stores/PHerc0343 10000 10400 withheld.npz
+uv run lattice-check withheld.npz out "s{:03d}" --z0 10000 --z1 10400 --only 10 7
+uv run lattice-xsec stores/PHerc0343 10200 xsec.png --surfaces out "s{:03d}"
 ```
 
-`AXIS.json` uses the control-point layout of the published umbilicus files. The winding sense is read
-from the data (tracks that go all the way round meet themselves one turn further out).
+Every command prints its options with `--help`. `axis.json` uses the control-point layout of the
+published umbilicus files, so a published axis can be used in place of step 3. The surfaces go unchanged
+into the published rendering chain (lasagna flatten, `vc_render_tifxyz`, the public ink models).
 
-A 1,800-slice band of a large scroll needs about 16 GB of memory and 20 to 30 minutes on an M3 Pro.
+Memory and time: a 1,800-slice band of a large scroll needs about 16 GB and 20 to 30 minutes on an
+M3 Pro laptop. Thinner bands need proportionally less.
 
-## Tools
+## Commands
 
-- `tools/trace_peek.py`: one cross-section of any scroll's track store, without downloading the store.
-  For choosing a scroll and placing the first axis point.
-- `tools/tracks_withheld.py`, `tools/track_check.py`: the withheld-track judge.
+| Command | Does |
+|---|---|
+| `lattice-fetch` | downloads a scroll's public trace store, resumable |
+| `lattice-peek` | one cross-section of a scroll from its index files and a few range requests, for choosing a scroll and placing the first axis point |
+| `lattice-march` | carries the axis along the scroll from one point placed by eye |
+| `lattice-unroll` | the solver: winding numbers for every trace, one surface per winding |
+| `lattice-withheld`, `lattice-check` | the withheld-track judge |
+| `lattice-xsec` | cross-section with surfaces drawn on it, for one or several sets of surfaces side by side |
 
 ## License
 

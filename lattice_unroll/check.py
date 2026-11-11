@@ -1,13 +1,12 @@
-"""track_check.py: do output surfaces follow one sheet? Scored with the organisers' own sheet traces.
+"""lattice-check: do surfaces follow one sheet? Scored with the organisers' own sheet traces.
 
-    uv run --with numpy --with scipy --with tifffile --with imagecodecs \
-        python cinder/track_check.py TRACKS.npz SURF_DIR FMT --first 10 --last 129 [--z0 10000 --z1 10500]
-        [--tol 6] [--up 4] [--order zyx]
+    lattice-check TRACKS.npz SURF_DIR FMT [--first 0 --last 999] [--z0 10000 --z1 10500]
+        [--tol 6] [--up 4] [--order zyx] [--only 10 7]
 
-TRACKS.npz is a sample from tracks_fetch.py: every track is a run of points (2 voxels apart) traced
-along one predicted sheet. It is the fitter's own input, and the fitter's own score "satisfied_tracks"
-asks the same question of its windings. SURF_DIR/FMT are tifxyz surfaces (fitted windings, snapped
-windings or numbered sheets), one per turn, numbered outward.
+TRACKS.npz comes from lattice-withheld: every track is a run of points (2 voxels apart) traced along
+one predicted sheet. It is the spiral fitter's own input, and the fitter's own score "satisfied_tracks"
+asks the same question of its windings. SURF_DIR/FMT are tifxyz surfaces, one per winding, numbered
+outward: "s{:03d}" for lattice-unroll, for example "w{:03d}" for the windings of the spiral fitter.
 
 A track point is on a surface when the surface passes within --tol voxels of it (distance along the
 surface normal at a node within reach; surfaces are upsampled --up times first). Per track:
@@ -47,8 +46,8 @@ def main():
     ap.add_argument("tracks")
     ap.add_argument("surf_dir")
     ap.add_argument("fmt")
-    ap.add_argument("--first", type=int, required=True)
-    ap.add_argument("--last", type=int, required=True)
+    ap.add_argument("--first", type=int, default=0)
+    ap.add_argument("--last", type=int, default=999)
     ap.add_argument("--z0", type=float, default=10000)
     ap.add_argument("--z1", type=float, default=10500)
     ap.add_argument("--tol", type=float, default=6.0)
