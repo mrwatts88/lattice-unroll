@@ -62,19 +62,31 @@ two by a change of turn, which is why the winning submission joined two windings
 
 ### PHerc. 0175A, a clean unread scroll
 
-<!-- comparison run with the published chain pending -->
+Section z 7720 to 9520. The published chain was run unchanged (the PHerc. 343 recipe: fit 30,000 steps,
+zero patches, snap of every winding) with the same scroll axis as lattice-unroll, so the comparison is
+about the unrolling alone. Both were scored by the same script on the same slices and withheld tracks.
+No settings were tuned on this scroll.
 
-| Measure | Published chain | lattice-unroll |
-|---|---|---|
-| Sheets on a ray with exactly one surface, slice z 8200 / 9000 | pending | 96 / 93 of 114 / 117 |
-| Sheets on a ray with two or more surfaces | pending | 3 % / 3 % |
-| Withheld tracks on one surface, z 8300 to 8800 | pending | 46 % |
-| Compute | pending | 31 min on a laptop CPU |
+| Measure | Published chain, fitted | Published chain, snapped | lattice-unroll |
+|---|---|---|---|
+| Sheets on a ray reached, slice z 8200 / 9000 | 86 / 89 | 86 / 89 | 114 / 117 |
+| Sheets on a ray with exactly one surface | 66 / 65 | 56 / 56 | 96 / 93 |
+| Sheets on a ray with two or more surfaces | 8.4 / 8.7 | 23 / 23 | 3.4 / 3.3 |
+| Withheld track points on a surface, z 8300 to 8800 | 55 % | 57 % | 86 % |
+| Withheld tracks lying on one surface | 33 % | 38 % | 58 % |
+| Covered withheld tracks on one surface | 91 % | 94 % | 92 % |
+| Compute | 4 h 15 min on an RTX 4090 (fit 3 h 9 min) | same run | 31 min on a laptop CPU |
+
+The fitter stops about 28 sheets short of the outside on this scroll, as it does on PHerc. 343. Where it
+does reach, its snap pulls neighbouring windings onto the same sheet. Where a track is covered at all, both
+methods keep it on one surface about equally often. The difference is in how much of the scroll is covered
+and how often a sheet is doubled.
 
 ## Limits
 
-- About a fifth to a third of the sheets on a ray get no surface, as with the published chain. The gain
-  is in doubled sheets made single and in sheets the fit never reached.
+- About a sixth to a third of the sheets on a ray get no surface (PHerc. 0175A: 13 to 17 percent,
+  PHerc. 343: up to a third). The gain is in doubled sheets made single and in sheets the fit never
+  reached.
 - The scroll axis is needed. It is placed by eye at one slice (inside the innermost loop), then carried
   along the scroll by the solver itself (`march`). A fully automatic axis is not done.
 - "The next track outward is the next winding" is wrong where sheets touch or fold back. On crushed parts
