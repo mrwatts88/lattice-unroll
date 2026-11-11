@@ -119,7 +119,7 @@ Needs [uv](https://docs.astral.sh/uv/) and Python 3.11 or newer. No GPU. Example
 PHerc. 343, from nothing to scored surfaces.
 
 ```bash
-git clone <this repository> lattice-unroll
+git clone https://github.com/mrwatts88/lattice-unroll.git
 cd lattice-unroll
 uv sync
 
