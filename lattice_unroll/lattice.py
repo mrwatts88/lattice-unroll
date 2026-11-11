@@ -249,7 +249,9 @@ def export(args, zyx, th, rho, wind, okp, sense, shift, t0):
         m2["uuid"] = name
         m2["source"] = "lattice-unroll: winding %d from the trace lattice, no spiral fit" % (wn + shift)
         m2["bbox"] = [[float(Y[v][:, k].min()) for k in range(3)], [float(Y[v][:, k].max()) for k in range(3)]]
-        m2.pop("area_vx2", None); m2.pop("area_cm2", None)
+        m2["scale"] = [1.0 / args.col_step, 1.0 / args.row_step]           # tifxyz: grid points per voxel, columns then rows
+        for k in ("area_vx2", "area_cm2", "snap"):                          # describe the source surface, not this one
+            m2.pop(k, None)
         json.dump(m2, open(os.path.join(od, "meta.json"), "w"), indent=1)
         rep.append(f"{name}\t{int(v.sum())}\t{float(v.mean()):.3f}\t{W}")
         written += 1

@@ -3,7 +3,7 @@
 One surface per papyrus sheet for a Herculaneum scroll, solved exactly from the public spiral-tracks
 data, on a laptop, without a spiral fit and without a GPU.
 
-**Status: draft for a Vesuvius Challenge Progress Prize entry. Not yet published.**
+Submitted to the Vesuvius Challenge Progress Prizes, November 2026.
 
 ## What it does
 
@@ -142,6 +142,11 @@ uv run lattice-withheld stores/PHerc0343 10000 10400 withheld.npz
 uv run lattice-check withheld.npz out "s{:03d}" --z0 10000 --z1 10400 --only 10 7
 uv run lattice-xsec stores/PHerc0343 10200 xsec.png --surfaces out "s{:03d}"
 ```
+
+Formats: the input is the organisers' public spiral-tracks store (`.vctracks`) as it is published.
+The output is standard tifxyz: one folder per winding with `x.tif`, `y.tif`, `z.tif` (float32, -1 where
+empty) and `meta.json` (`format`, `type`, `scale`, `bbox`), the same layout as the published chain's
+meshes.
 
 On a crushed scroll add `--max-spread 5` to step 4 (see Limits). These are the settings of all results
 above. Every command prints its options with `--help`. `axis.json` uses the control-point layout of the
