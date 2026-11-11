@@ -103,7 +103,12 @@ windings on one sheet) and leave the next sheet empty. On the right, one colour 
   along the scroll by the solver itself (`march`). A fully automatic axis is not done.
 - "The next track outward is the next winding" is wrong where sheets touch or fold back. On crushed parts
   of a scroll (PHerc. 0483B, part of each turn) surfaces cut across layers there. `--max-spread` removes
-  such cells by how far their points sit off a flat fit.
+  such cells by how far their points sit off a flat fit. On PHerc. 0175A, a clean scroll, `--max-spread 5`
+  removes 6 percent of the surface. On PHerc. 0483B it removes 48 percent (26 percent at 8): the
+  zig-zags across layers in the crushed zone go, and so do jagged but partly usable stretches next to
+  them. Below: PHerc. 0483B at z 9980 without the filter (left) and with `--max-spread 5` (right).
+
+  ![PHerc. 0483B cross-section without and with the off-sheet filter](docs/xsec_0483B_maxspread.png)
 - Scrolls crushed into zig-zag folds with no core (PHerc. 0490B) are out of reach of this version.
 - The track judge shares its tracer with the input, so it shows consistency, not truth. The independent
   checks are the known line and ink.
@@ -130,7 +135,7 @@ uv run lattice-march stores/PHerc0343 axis.json 10000 10400 march --start 5066 4
 
 # 4. Solve the band and write one surface per winding to out/s<number>/ (tifxyz).
 uv run lattice-unroll stores/PHerc0343 axis.json 10000 10400 out --sense 1 \
-    --w-cross 8 --w-near 4 --split-rounds 2 --tail-rel 0.0005 --row-step 20 --col-step 20 --max-spread 5
+    --w-cross 8 --w-near 4 --split-rounds 2 --tail-rel 0.0005 --row-step 20 --col-step 20
 
 # 5. Score the surfaces on the traces the solver never read (one in ten), and draw a cross-section.
 uv run lattice-withheld stores/PHerc0343 10000 10400 withheld.npz
@@ -138,7 +143,8 @@ uv run lattice-check withheld.npz out "s{:03d}" --z0 10000 --z1 10400 --only 10 
 uv run lattice-xsec stores/PHerc0343 10200 xsec.png --surfaces out "s{:03d}"
 ```
 
-Every command prints its options with `--help`. `axis.json` uses the control-point layout of the
+On a crushed scroll add `--max-spread 5` to step 4 (see Limits). These are the settings of all results
+above. Every command prints its options with `--help`. `axis.json` uses the control-point layout of the
 published umbilicus files, so a published axis can be used in place of step 3. The surfaces go unchanged
 into the published rendering chain (lasagna flatten, `vc_render_tifxyz`, the public ink models).
 
