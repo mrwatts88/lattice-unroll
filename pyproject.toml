@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 lattice-unroll = "lattice_unroll.lattice:main"
+lattice-centre = "lattice_unroll.centre:main"
 lattice-march = "lattice_unroll.march:main"
 lattice-fetch = "lattice_unroll.stores:main"
 lattice-peek = "lattice_unroll.peek:main"

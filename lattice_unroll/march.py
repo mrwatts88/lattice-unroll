@@ -1,9 +1,10 @@
-"""lattice-march: carry the scroll axis along the scroll, starting from one point placed by eye.
+"""lattice-march: carry the scroll axis along the scroll, starting from one point.
 
     lattice-march STORE_DIR AXIS.json Z0 Z1 WORK_DIR --start X Y Z [--step 200] [lattice-unroll options]
 
-lattice-unroll needs the scroll axis (the line the sheet winds round) at every height it solves. Place one
-point by eye at height Z, inside the innermost loop of a cross-section (lattice-peek draws one). This
+lattice-unroll needs the scroll axis (the line the sheet winds round) at every height it solves. Give one
+point at height Z inside the innermost loop of a cross-section, from lattice-centre or by eye from
+lattice-peek. This
 solves a thin band of --step slices round Z with that point, then thin bands one after the other up to Z1
 and down to Z0, each with the axis known so far, and after every band adds to AXIS.json where the
 innermost complete winding of that band sits (its middle, every 80 slices). No surfaces are written.
@@ -47,13 +48,13 @@ def main(argv=None):
     ap.add_argument("z0", type=int)
     ap.add_argument("z1", type=int)
     ap.add_argument("work_dir")
-    ap.add_argument("--start", type=float, nargs=3, metavar=("X", "Y", "Z"), help="the point placed by eye")
+    ap.add_argument("--start", type=float, nargs=3, metavar=("X", "Y", "Z"), help="the start point (lattice-centre prints one)")
     ap.add_argument("--step", type=int, default=200, help="slices per band")
     args, extra = ap.parse_known_args(argv)
     os.makedirs(args.work_dir, exist_ok=True)
     if args.start:
         x, y, z = args.start
-        json.dump({"control_points": [{"x": x, "y": y, "z": int(z)}], "source": "placed by eye"}, open(args.axis, "w"), indent=1)
+        json.dump({"control_points": [{"x": x, "y": y, "z": int(z)}], "source": "start point"}, open(args.axis, "w"), indent=1)
     if not os.path.exists(args.axis):
         raise SystemExit(f"{args.axis} does not exist: give --start X Y Z")
     zs = int(json.load(open(args.axis))["control_points"][0]["z"])

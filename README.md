@@ -99,8 +99,16 @@ windings on one sheet) and leave the next sheet empty. On the right, one colour 
 - About a sixth to a third of the sheets on a ray get no surface (PHerc. 0175A: 13 to 17 percent,
   PHerc. 343: up to a third). The gain is in doubled sheets made single and in sheets the fit never
   reached.
-- The scroll axis is needed. It is placed by eye at one slice (inside the innermost loop), then carried
-  along the scroll by the solver itself (`march`). A fully automatic axis is not done.
+- The scroll axis is needed. `lattice-centre` finds a start point inside the innermost loop without
+  looking: seen from a point inside it, every winding turns a full circle, so the sum of the angles the
+  trace pieces sweep is largest there. Of several slices it keeps the one with the widest hollow. The
+  solver then carries the axis along the scroll (`lattice-march`). On PHerc. 0175A this gives the same
+  result as a point placed by eye (96.0 / 93.4 sheets per ray with exactly one surface against
+  96.1 / 93.3, withheld tracks on one surface 57.6 % against 58.0 %). On the crushed PHerc. 0483B it is a
+  little worse (28.9 % against 30.2 %, and 19 percent less surface): in the crushed lower part the march
+  stays off the centre. The solver's log shows this as a large radius of the innermost complete winding
+  (170 to 320 voxels there, against 40 to 110 from the point by eye). There, look with `lattice-peek` and
+  give `--start` by hand.
 - "The next track outward is the next winding" is wrong where sheets touch or fold back. On crushed parts
   of a scroll (PHerc. 0483B, part of each turn) surfaces cut across layers there. `--max-spread` removes
   such cells by how far their points sit off a flat fit. On PHerc. 0175A, a clean scroll, `--max-spread 5`
@@ -126,11 +134,11 @@ uv sync
 # 1. The scroll's trace store, 9 GB for PHerc. 343. Run again to resume an interrupted download.
 uv run lattice-fetch PHerc0343 stores
 
-# 2. Look at one cross-section and pick a point inside the innermost loop (the grid is every 500 voxels).
-uv run lattice-peek PHerc0343 peek.png --z 10237 --down 2
+# 2. Find a point inside the innermost loop. Its last line is X Y Z (here 5306 4224 10132).
+uv run lattice-centre stores/PHerc0343 10000 10400
 
 # 3. Carry the axis from that point along the band. Prints the winding sense it reads.
-uv run lattice-march stores/PHerc0343 axis.json 10000 10400 march --start 5066 4321 10237 \
+uv run lattice-march stores/PHerc0343 axis.json 10000 10400 march --start 5306 4224 10132 \
     --w-cross 8 --w-near 4 --split-rounds 2
 
 # 4. Solve the band and write one surface per winding to out/s<number>/ (tifxyz).
@@ -161,8 +169,9 @@ M3 Pro laptop. Thinner bands need proportionally less.
 | Command | Does |
 |---|---|
 | `lattice-fetch` | downloads a scroll's public trace store, resumable |
-| `lattice-peek` | one cross-section of a scroll from its index files and a few range requests, for choosing a scroll and placing the first axis point |
-| `lattice-march` | carries the axis along the scroll from one point placed by eye |
+| `lattice-peek` | one cross-section of a scroll from its index files and a few range requests, for choosing a scroll or checking the start point by eye |
+| `lattice-centre` | finds a point inside the innermost loop, the start for `lattice-march` |
+| `lattice-march` | carries the axis along the scroll from one point |
 | `lattice-unroll` | the solver: winding numbers for every trace, one surface per winding |
 | `lattice-withheld`, `lattice-check` | the withheld-track judge |
 | `lattice-xsec` | cross-section with surfaces drawn on it, for one or several sets of surfaces side by side |
